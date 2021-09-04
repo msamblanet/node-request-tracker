@@ -14,7 +14,7 @@ export type RequestTrackerConfigOverrides = ConfigOverrides<RequestTrackerConfig
 
 export interface TrackedRequest<X> {
     readonly startTime: number
-    readonly completeTime?: number
+    readonly completedTime?: number
     readonly desc: string
     readonly meta: X
 }
@@ -32,14 +32,14 @@ class RequestEntry<X> implements TrackedRequest<X> {
     prev?: RequestEntry<X>
 
     readonly startTime: number
-    completeTime?: number
+    completedTime?: number
     readonly desc: string
     readonly meta: X
 
-    constructor(desc: string, meta: X, now: number = new Date().getTime()) {
+    constructor(desc: string, meta: X) {
         this.desc = desc;
         this.meta = meta;
-        this.startTime = now ?? new Date().getTime();
+        this.startTime = Date.now();
     }
 }
 
@@ -51,14 +51,14 @@ export class RequestTracker<X> {
     }
     static readonly DEFAULT_STATUS_MAPPER = <Y>(entry: RequestEntry<Y>): TrackedRequest<Y> => ({
         startTime: entry.startTime,
-        completeTime: entry.completeTime,
+        completedTime: entry.completedTime,
         desc: entry.desc,
         meta: entry.meta
     })
 
     protected readonly config: RequestTrackerConfig;
 
-    public readonly startTime = new Date().getTime()
+    public readonly startTime = Date.now()
     protected head: RequestEntry<X> | undefined = undefined
     protected tail: RequestEntry<X> | undefined = undefined
     protected completed: Array<RequestEntry<X>> = []
@@ -69,12 +69,12 @@ export class RequestTracker<X> {
     public get numPendingRequests(): number { return this.pending }
 
     constructor(...options: RequestTrackerConfigOverrides[]) {
-        this.config = extend(true, {}, RequestTracker.DEFAULT_CONFIG, ...options ?? []);
+        this.config = extend(true, {}, RequestTracker.DEFAULT_CONFIG, ...options);
     }
 
-    public request(desc: string, meta: X, now = new Date().getTime()): TrackedRequest<X> {
+    public request(desc: string, meta: X): TrackedRequest<X> {
         // Create a request
-        const req = new RequestEntry<X>(desc, meta, now);
+        const req = new RequestEntry<X>(desc, meta);
 
         // Link the request into the linked list
         req.prev = this.tail;
@@ -99,12 +99,12 @@ export class RequestTracker<X> {
         }
     }
 
-    public completeRequest(_req: TrackedRequest<X>, now = new Date().getTime()): void {
+    public completeRequest(_req: TrackedRequest<X>): void {
         const req: RequestEntry<X> = _req;
 
         // Note it as completed
         this.pending--;
-        req.completeTime = now ?? new Date().getTime();
+        req.completedTime = Date.now();
 
         // Unlink it from the list
         if (req.prev) req.prev.next = req.next;
@@ -117,17 +117,18 @@ export class RequestTracker<X> {
         this.completed.push(req);
 
         // Clean up history if needed
-        if (this.completed.length > this.config.maxCompleted && this.config.autoCleanup) this.cleanupHistory(now);
+        if (this.completed.length > this.config.maxCompleted && this.config.autoCleanup) this.cleanupHistory();
     }
 
-    public cleanupHistory(now = new Date().getTime()): number {
+    public cleanupHistory(): number {
         // Purge everything at the front if we are too long
         let sliceCount = this.completed.length - this.config.maxCompleted;
+        if (sliceCount < 0) sliceCount = 0;
 
         // Purge everything that is too old if needed
         if (this.config.maxCompletedMillis > 0) {
-            const threshold = (now ?? new Date().getTime()) - this.config.maxCompletedMillis;
-            while (this.completed[sliceCount].startTime < threshold) sliceCount++;
+            const threshold = Date.now() - this.config.maxCompletedMillis;
+            while (this.completed[sliceCount]?.completedTime as number <= threshold) sliceCount++;
         }
 
         // Now actually splice the items off the array

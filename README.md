@@ -50,7 +50,7 @@ const tracker = new RequestTracker<string>(config?.yourModule?.tracker);
 const meta = { a: "Test" };
 const result: string = tracker.track("Some Description of this call", , async () => Promise<string>
     const rv = api.makeYourApiCall();
-    b = new Date().getTime();
+    b = Date.now();
     return rv;
 });
 

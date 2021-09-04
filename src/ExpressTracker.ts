@@ -7,14 +7,14 @@ export type ExpressTrackerMetadata = {
     contentType?: string | undefined
 };
 
-export default class ExpressMiddlewareTracker extends RequestTracker<ExpressTrackerMetadata> {
+export class ExpressTracker extends RequestTracker<ExpressTrackerMetadata> {
     private readonly onHeaders
 
     public constructor(...options: RequestTrackerConfigOverrides[]) {
         super(...options);
 
         const t = optionalRequire("on-Headers");
-        if (!t) throw new Error("Missing optional dependency required for ExpressMiddlewareTracker: on-headers");
+        if (!t) throw new Error("Missing optional dependency required for ExpressTracker: on-headers");
         this.onHeaders = t;
     }
 
@@ -36,3 +36,4 @@ export default class ExpressMiddlewareTracker extends RequestTracker<ExpressTrac
         }
     }
 }
+export default ExpressTracker;
