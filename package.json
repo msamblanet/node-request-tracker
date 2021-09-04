@@ -31,11 +31,11 @@
         "build": "npm run build:clean && npm run build:gen",
         "build:clean": "del-cli dist",
         "build:check": "npm run build:check:mjs && npm run build:check:cjs && npm run test",
-        "build:check:mjs": "tsc --noEmit -p tsconfig-mjs.json",
-        "build:check:cjs": "tsc --noEmit",
+        "build:check:mjs": "tsc --noEmit -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
+        "build:check:cjs": "tsc --noEmit -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
         "build:gen": "npm run build:gen:mjs && npm run build:gen:cjs",
-        "build:gen:mjs": "tsc -p tsconfig-mjs.json",
-        "build:gen:cjs": "tsc",
+        "build:gen:mjs": "tsc -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
+        "build:gen:cjs": "tsc -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
         "prepack": "npm run lint && npm run build:check && npm run build",
         "lib:check": "ncu",
         "lib:update:patch": "ncu -u -t patch && npm install",
@@ -44,13 +44,18 @@
         "lib:update:doctor": "ncu --doctor -u -t latest"
     },
     "devDependencies": {
+        "@msamblanet/node-project-settings": "^0.1.0",
+        "@types/express": "^4.17.13",
+        "@types/extend": "^3.0.1",
         "@types/jest": "^27.0.1",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.7.8",
+        "@types/on-headers": "^1.0.0",
         "@typescript-eslint/eslint-plugin": "^4.30.0",
         "del-cli": "^4.0.1",
         "dotenv": "^10.0.0",
         "eslint": "^7.32.0",
+        "express": "^4.17.1",
         "jest": "^27.1.0",
         "nodemon": "^2.0.12",
         "npm-check-updates": "^11.8.3",
@@ -74,5 +79,12 @@
         "execMap": {
             "ts": "node -r ts-node/register"
         }
+    },
+    "dependencies": {
+        "extend": "^3.0.2",
+        "optional-require": "^1.1.7"
+    },
+    "optionalDependencies": {
+        "on-headers": "^1.0.2"
     }
 }

@@ -1,3 +1,8 @@
 // This defines the exports available when importing this project as a library
 
-export default "Example export";
+import RequestTracker from './RequestTracker';
+export default RequestTracker;
+
+export * from './RequestTracker';
+export * from './ExpressTracker';
+

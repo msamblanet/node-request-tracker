@@ -1,65 +1,112 @@
-# Node Typescript Template
+# Node Request Tracker
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This repository is part of a collection of my personal node.js libraries and templates.  I am making them available to the public - feel free to offer suggestions, report issues, or make PRs via GitHub.
 
-This project is a template node.js project for use with server-side typescript.  It provides for unit testing, typescript compilation, and debugging.  Configuration for debugging in Visual Studio Code is provided.
+This library provides some basic classes for tracking inbound and outbound requests from a server for the purpose of debugging and admin diagnostics.  A basic implementation for Express is provided.
 
-## Usage
+## Usage:
 
-- Create a new GitHub project using the ```Use this template``` in Github
-    - If not using github, download or clone the files into your own repository
-- Review and update:
-    - [package.json](./package.json)
-    - [README.md](./README.md)
-    - [TODO.md](./TODO.md)
-    - [HISTORY.md](./HISTORY.md)
-    - [LICENSE](./LICENSE)
-- Implement your library in [src/index.ts](./src/index.ts)
-- Implement your main code in [src/main.ts](./src/main.ts)
-- Define any necessary 3rd party library typescript definitions in [src/@types](./src/@types)
-    - Delete [src/@types](./src/@types/example-module) once no longer needed
-- Implement your unit tests in [test/](./test)
-    - Unit test files should be named ```*.test.ts```
-    - Delete [test/example.test.ts](./test/example.test.ts) once no longer needed
+### Express
 
-## Features
+For express you must install the optional dependencies:
 
-- Preconfigured package.json for making both CJS and MJS style code
-- Integration with [Jest](https://jestjs.io/) for unit testing and code coverage reporting
-- Configuration with Visual Studio Code to provide debugging launch commands
-- Integration with eslint
+```npm i express-headers```
 
-## npm run scripts available
+```javascript
+import { ExpressTracker } from "@msamblanet/node-request-tracker";
+import config from "config";
 
-- ```npm run dev``` - Runs ```src/main.ts``` script locally
-- ```npm run debug``` - Runs ```src/main.ts``` script locally with the JS inspector enabled
-- ```npm run nodemon``` - Runs ```src/main.ts``` script locally via nodemon (to restart on file changes)
-    - ```npm run nodemon:debug``` - Same as nodemon but has the JS inspector enabled
-- ```npm run test``` - Runs all of the Jest unit tests
-    - ```npm run test:open``` - Opens the coverage report in a local browser window
-    - ```npm run test:debug``` - Same but has the JS inspector enabled
-    - ```npm run test:watch``` - Runs all of the Jest unit tests in watch mode (to retest on changes)
-    - ```npm run test:watch:debug``` - Same but has the JS inspector enabled
-- ```npm run lint``` - Runs eslint
-    - ```npm run lint:fix``` - Runs eslint with the fix option
-- ```npm run build``` - Performs a build:clean and build:gen to build the code
-    - ```npm run build:clean``` - Deletes the dist folder
-    - ```npm run build:check``` - Runs tsc without output to verify the code
-    - ```npm run build:gen``` - Runs tsc to compile the typescript
-- prepack - This is executed just before npm packages for release.  It runs a lint, build:check, and build to generate the library for packaging.
-- ```lib:check``` - Reports on updated dependencies WITHOUT installing any
-- ```lib:update:patch``` - Update and install all available patch level updates
-- ```lib:update:minor``` - Update and install all available patch and minor level updates
-- ```lib:update:latest``` - Update and install all available dependencies to the latest version (MAY INCLUDE BREAKING CHANGES)
-- ```lib:update:doctor``` - Run NCU in "doctor" mode to update all libraries - uses unit tests to see if any individual update breaks the system
-    - For more info, run ```npx ncu --doctor```
+const tracker = new ExpressTracker(config?.express?.tracker);
 
-## VSCode Debug Actions
+const app = new Express();
+app.use(tracker);
 
-- ```Unit Tests: All``` - Runs all unit tests in the debugger
-- ```Unit Tests: Watch``` - Runs all the unit tests in watch mode in the debugger
-- ```Unit Tests: Current File``` - Runs the currently open file as a unit test in the debugger
-- ```Debug: Current File``` - Runs the current file as application code in the debugger
-- ```Debug: src/main.ts``` - Runs the main entry point in the debugger
-- ```Debug: Attach to 5858``` - Ataches the IDE to the default JS inspector port locally
+// Setup your express app here
+
+// When ready to inspect the data:
+const startTime = tracker.startTime; // Time the tracker started
+const total = tracker.numTotalRequests;
+const pending = tracker.numPendingRequests;
+const status = tracker.status(); // A simple object will all the status - suitable for JSON.stringify
+
+for (const req of tracker.pendingRequests) { } // Iterate over all pending requests
+for (const req of tracker.completedRequests) { } // Iterate over all completed requests
+```
+
+### Outbound HTTP calls
+
+```javascript
+import { RequestTracker } from "@msamblanet/node-request-tracker";
+import config from "config";
+
+type ModuleMetadata = {
+    a: string,
+    b?: number
+}
+const tracker = new RequestTracker<string>(config?.yourModule?.tracker);
+
+// When time to make your API call:
+const meta = { a: "Test" };
+const result: string = tracker.track("Some Description of this call", , async () => Promise<string>
+    const rv = api.makeYourApiCall();
+    b = Date.now();
+    return rv;
+});
+
+// Consume this the same way as the express example...
+```
+
+## API
+
+#### RequestTracker(config...)
+
+Constructs a new request tracker.  Configuration options are:
+
+- maxCompleted - Maximum number of completed records to track - default is 50
+- maxCompletedMillis - Any completed request over this many milliseconds past complete is subject to removal from the completion list - default is 5 minutes
+- autoCleanup - if true (default) then the completed history will be automatically purged when it fills up.  Set to false to either keep unlimited history or to manually control cleanup (via the cleanupHistory method).
+
+#### RequestTracker.request(desc, meta)
+
+Begins tracking a request.  ```desc``` is a string description and ```meta``` is custom metadata on the request for use by consumers of the tracker.  Save the return value and call ```completeRequest``` wiehn it is done.
+
+#### RequestTracker.track(desc, meta, action)
+
+Tracks a request that is implemented by action.  Allows the RequestTracker to manage the details of managing the tracking.
+
+Action receives ```meta``` as a parameter and must return a Promise.
+
+#### RequestTracker.completeRequest(req)
+
+Makes a request as complete.  ```req``` is the return value from request.
+
+#### RequestTracker.cleanupHistory()
+
+Allows you to manually request cleaning up of the history.  Normally you do not need to call this and it will be called automatically when the completed history gets too long.
+
+If you are saving a very large number of completed history records, you may wish to call this manually and set the ```autoCleanup``` option to false to ensure a more predictable impact on performance.
+
+#### RequestTracker.pendingRequests()
+
+Returns an iterable of all the currently pending requests.
+
+#### RequestTracker.completedRequests()
+
+Returns an Iterable of all the remembered completed requests.
+
+### ExpressTracker
+
+A basic subclass of RequestTracker that exposes a middleware method to inject into express (or any compatible HTTP middleware engine).  Relies on the optional dependency ```express-headers``` for it's implementation.
+
+#### Configuration
+
+ExpressTracker uses the same configuration as RequestTracker.
+
+#### ExpressTracker.expressMiddleware
+
+A middleware method to track all express requests.  The result info includes the following:
+
+- desc - the URL of the request
+- meta.statusCode - Status code from the response
+- meta.contentType - MIME type of the response
