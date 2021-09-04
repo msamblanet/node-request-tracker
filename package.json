@@ -31,11 +31,11 @@
         "build": "npm run build:clean && npm run build:gen",
         "build:clean": "del-cli dist",
         "build:check": "npm run build:check:mjs && npm run build:check:cjs && npm run test",
-        "build:check:mjs": "tsc --noEmit ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
-        "build:check:cjs": "tsc --noEmit ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
+        "build:check:mjs": "tsc --noEmit -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
+        "build:check:cjs": "tsc --noEmit -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
         "build:gen": "npm run build:gen:mjs && npm run build:gen:cjs",
-        "build:gen:mjs": "tsc ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
-        "build:gen:cjs": "tsc ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
+        "build:gen:mjs": "tsc -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-mjs.json",
+        "build:gen:cjs": "tsc -p ./node_modules/@msamblanet/node-project-settings/base/tsconfig-cjs.json",
         "prepack": "npm run lint && npm run build:check && npm run build",
         "lib:check": "ncu",
         "lib:update:patch": "ncu -u -t patch && npm install",
@@ -55,6 +55,7 @@
         "del-cli": "^4.0.1",
         "dotenv": "^10.0.0",
         "eslint": "^7.32.0",
+        "express": "^4.17.1",
         "jest": "^27.1.0",
         "nodemon": "^2.0.12",
         "npm-check-updates": "^11.8.3",
@@ -84,7 +85,6 @@
         "optional-require": "^1.1.7"
     },
     "optionalDependencies": {
-        "express": "^4.17.1",
         "on-headers": "^1.0.2"
     }
 }
