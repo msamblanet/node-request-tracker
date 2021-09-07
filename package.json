@@ -3,19 +3,22 @@
     "version": "0.1.0",
     "private": true,
     "description": "Template node.js project for typescript projects",
-    "author": "Michael Samblanet <michael@samblanet.com>",
-    "license": "Apache-2.0",
+    "homepage": "https://github.com/msamblanet/node-ts-template",
+    "bugs": {
+        "url": "https://github.com/msamblanet/node-ts-template/issues"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/msamblanet/node-ts-template.git"
     },
-    "bugs": {
-        "url": "https://github.com/msamblanet/node-ts-template/issues"
-    },
-    "homepage": "https://github.com/msamblanet/node-ts-template",
+    "license": "Apache-2.0",
+    "author": "Michael Samblanet <michael@samblanet.com>",
     "main": "dist/cjs/index.js",
     "module": "dist/mjs/index.js",
     "types": "dist/mjs/index.d.ts",
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "dev": "ts-node src/main.ts",
         "debug": "node --inspect -r ts-node/register src/main.ts",
@@ -41,50 +44,48 @@
         "lib:update:patch": "ncu -u -t patch && npm install",
         "lib:update:minor": "ncu -u -t minor && npm install",
         "lib:update:latest": "ncu -u -t latest && npm install",
-        "lib:update:doctor": "ncu --doctor -u -t latest"
+        "lib:update:doctor": "ncu --doctor -u -t latest",
+        "applyProjectTemplate": "applyProjectTemplate"
+    },
+    "nodemonConfig": {
+        "execMap": {
+            "ts": "node -r ts-node/register"
+        },
+        "ext": "ts",
+        "watch": [
+            "src/"
+        ]
+    },
+    "dependencies": {
+        "extend": "^3.0.2",
+        "optional-require": "^1.1.7"
     },
     "devDependencies": {
-        "@msamblanet/node-project-settings": "^0.1.0",
+        "@msamblanet/node-project-settings": "^0.2.24",
         "@types/express": "^4.17.13",
         "@types/extend": "^3.0.1",
         "@types/jest": "^27.0.1",
         "@types/mocha": "^9.0.0",
-        "@types/node": "^16.7.8",
+        "@types/node": "^16.7.13",
         "@types/on-headers": "^1.0.0",
-        "@typescript-eslint/eslint-plugin": "^4.30.0",
+        "@typescript-eslint/eslint-plugin": "^4.31.0",
         "del-cli": "^4.0.1",
         "dotenv": "^10.0.0",
         "eslint": "^7.32.0",
         "express": "^4.17.1",
         "jest": "^27.1.0",
         "nodemon": "^2.0.12",
-        "npm-check-updates": "^11.8.3",
+        "npm-check-updates": "^11.8.5",
         "opener": "^1.5.2",
         "source-map-support": "^0.5.19",
         "ts-jest": "^27.0.5",
         "ts-node": "^10.2.1",
         "typescript": "^4.4.2"
     },
-    "files": [
-        "dist"
-    ],
-    "engines": {
-        "node": ">=16.7.0"
-    },
-    "nodemonConfig": {
-        "watch": [
-            "src/"
-        ],
-        "ext": "ts",
-        "execMap": {
-            "ts": "node -r ts-node/register"
-        }
-    },
-    "dependencies": {
-        "extend": "^3.0.2",
-        "optional-require": "^1.1.7"
-    },
     "optionalDependencies": {
         "on-headers": "^1.0.2"
+    },
+    "engines": {
+        "node": ">=16.7.0"
     }
 }
