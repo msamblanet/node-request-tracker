@@ -1,6 +1,6 @@
 import type Express from "express";
 import type OnHeaders from "on-headers";
-import { RequestTracker, RequestTrackerConfigOverrides } from "./RequestTracker";
+import { RequestTracker, RequestTrackerConfigOverride } from "./RequestTracker";
 import { optionalRequire } from "optional-require";
 
 export type ExpressTrackerMetadata = {
@@ -11,8 +11,8 @@ export type ExpressTrackerMetadata = {
 export class ExpressTracker extends RequestTracker<ExpressTrackerMetadata> {
     private readonly onHeaders: typeof OnHeaders
 
-    public constructor(...options: RequestTrackerConfigOverrides[]) {
-        super(...options);
+    public constructor(...config: RequestTrackerConfigOverride[]) {
+        super(...config);
 
         const t = optionalRequire("on-headers");
         /* istanbul ignore next */

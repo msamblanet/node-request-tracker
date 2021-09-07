@@ -1,16 +1,11 @@
-import extend from "extend";
+import { Config, Override, BaseConfigurable } from "@msamblanet/node-config-types";
 
-// https://stackoverflow.com/questions/41980195/recursive-partialt-in-typescript
-export type ConfigOverrides<T> = {
-    [P in keyof T]?: ConfigOverrides<T[P]>;
-};
-
-export type RequestTrackerConfig = {
+export interface RequestTrackerConfig extends Config {
     maxCompleted: number
-    maxCompletedMillis: number // milliseconds
+    maxCompletedMillis: number
     autoCleanup: boolean
 }
-export type RequestTrackerConfigOverrides = ConfigOverrides<RequestTrackerConfig>
+export type RequestTrackerConfigOverride = Override<RequestTrackerConfig>
 
 export interface TrackedRequest<X> {
     readonly startTime: number
@@ -28,35 +23,33 @@ export interface StatusJson<X> {
 }
 
 class RequestEntry<X> implements TrackedRequest<X> {
-    next?: RequestEntry<X>
-    prev?: RequestEntry<X>
+    public next?: RequestEntry<X>
+    public prev?: RequestEntry<X>
 
-    readonly startTime: number
-    completedTime?: number
-    readonly desc: string
-    readonly meta: X
+    public readonly startTime: number
+    public completedTime?: number
+    public readonly desc: string
+    public readonly meta: X
 
-    constructor(desc: string, meta: X) {
+    public constructor(desc: string, meta: X) {
         this.desc = desc;
         this.meta = meta;
         this.startTime = Date.now();
     }
 }
 
-export class RequestTracker<X> {
-    static readonly DEFAULT_CONFIG: RequestTrackerConfig = {
+export class RequestTracker<X> extends BaseConfigurable<RequestTrackerConfig> {
+    public static readonly DEFAULT_CONFIG: RequestTrackerConfig = {
         maxCompleted: 50,
         maxCompletedMillis: 5 * 60 * 1000,
         autoCleanup: true
     }
-    static readonly DEFAULT_STATUS_MAPPER = <Y>(entry: RequestEntry<Y>): TrackedRequest<Y> => ({
+    public static readonly DEFAULT_STATUS_MAPPER = <Y>(entry: RequestEntry<Y>): TrackedRequest<Y> => ({
         startTime: entry.startTime,
         completedTime: entry.completedTime,
         desc: entry.desc,
         meta: entry.meta
     })
-
-    protected readonly config: RequestTrackerConfig;
 
     public readonly startTime = Date.now()
     protected head: RequestEntry<X> | undefined = undefined
@@ -68,8 +61,8 @@ export class RequestTracker<X> {
     public get numTotalRequests(): number { return this.total }
     public get numPendingRequests(): number { return this.pending }
 
-    constructor(...options: RequestTrackerConfigOverrides[]) {
-        this.config = extend(true, {}, RequestTracker.DEFAULT_CONFIG, ...options);
+    constructor(...config: RequestTrackerConfigOverride[]) {
+        super(RequestTracker.DEFAULT_CONFIG, ...config);
     }
 
     public request(desc: string, meta: X): TrackedRequest<X> {
